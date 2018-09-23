@@ -70,7 +70,28 @@ def readAndWriteAudio(folder):
     files = readFolder(folder)
     writeAudio(files, folder)
 
-def downloadYtAndSliceBy(id, target, seconds_per_segment = 1, dtype = 'int16'):
+def downloadYtAndPrepareAudio(id, target, stripSilence, dtype = 'int16'):
+    print('id', id)
+    folder = '%s/%s' % (target, id)
+    downloaded_yt = '%s/yt.wav' % (folder)
+    prepared = '%s/prepared.wav' % (folder)    
+    #output_path_for_slices = '%s/out' % (folder)
+    
+    clearFolder(folder)
+    #clearFolder(output_path_for_slices)    
+    
+    getVid(id, downloaded_yt)
+    if stripSilence:
+        file = stripSilenceFromAudio(downloaded_yt)
+        
+    else:
+        file = AudioSegment.from_file(downloaded_yt)
+    
+    file.export(prepared, format="wav", bitrate="44.1k")        
+    return prepared
+    
+# OLD IMPLEMENTATION
+def downloadYtAndSliceBy(id, target, stripSilence, seconds_per_segment = 1, dtype = 'int16'):
     print('id', id, 'seconds per segment', seconds_per_segment)
     folder = '%s/%s' % (target, id)
     downloaded_yt = '%s/yt.wav' % (folder)
@@ -81,7 +102,12 @@ def downloadYtAndSliceBy(id, target, seconds_per_segment = 1, dtype = 'int16'):
     clearFolder(output_path_for_slices)    
     
     getVid(id, downloaded_yt)
-    file = stripSilenceFromAudio(downloaded_yt)
+    if stripSilence:
+        file = stripSilenceFromAudio(downloaded_yt)
+        file.export(stripped_file, format="wav", bitrate="44.1k")
+    else:
+        file = AudioSegment.from_file(downloaded_yt)
+        
     length = math.ceil(len(file) / 1000 / seconds_per_segment)
     for i in range(0, length):
         slice = sliceAudioFile(file, output_path_for_slices, seconds_per_segment, i, dtype)
