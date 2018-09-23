@@ -94,8 +94,8 @@ ENV/
 # For mac
 .DS_Store
 
-samples
-checkpoints
+# samples
+# checkpoints
 model
 data
 

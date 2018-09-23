@@ -65,10 +65,10 @@ def getFilePathsForClass(c):
     dirs = readFolder('samples/%s' % (c))
     collected_files = []
     for d in dirs:
-        files = readFolder('samples/%s/%s/out' % (c, d))
+        files = readFolder('samples/%s/%s' % (c, d))
 
         for file in files:
-            collected_files.append('samples/%s/%s/out/%s' % (c, d, file))
+            collected_files.append('samples/%s/%s/%s' % (c, d, file))
     return collected_files
             
 def getSampleForFile(file):
@@ -123,7 +123,7 @@ def getSamples(classes, shuf = True, number_of_samples = None, use_full_files = 
     #print('collecting samples')
     for idx, cls in enumerate(classes):
         files = getFilePathsForClass(cls)
-        x, y = getData(files, number_of_samples, use_full_files, log, getOneHot(len(classes)))
+        x, y = getData(files, number_of_samples, use_full_files, log, getOneHot(len(classes), idx))
         exes.append(x)
         whys.append(y)
     
