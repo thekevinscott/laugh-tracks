@@ -101,3 +101,9 @@ data
 
 vggish_model.ckpt
 vggish_pca_params.npz
+vggish_model.ckpt.1
+vggish_pca_params.npz.1
+
+floyd.yml
+.floydexpt
+.floydignore
