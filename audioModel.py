@@ -58,12 +58,17 @@ def loadVGGish(sess, number_of_classes):
     sess.run(tf.global_variables_initializer())
     vggish_slim.load_vggish_slim_checkpoint(sess, './vggish_model.ckpt') 
     return logits, pred
-    
-    
-def train(get_examples, number_of_classes, model_name = 'model', epochs = 50):
-    #model_folder = './model/%s' % model_name
+
+def saveModel(model_name):
+    model_folder = './model/%s' % model_name
     model_name_to_save = '%s/model' % (model_folder)    
-    #shell('mkdir %s' % (model_folder))
+    if not os.path.isdir(model_folder):
+        os.mkdir(model_folder)
+    saver = tf.train.Saver()
+    saver.save(sess, model_name_to_save)
+    
+def train(get_examples, number_of_classes, model_name='foo', epochs = 50):
+
     with tf.Graph().as_default(), tf.Session() as sess:
         # Define VGGish.
         logits, pred = loadVGGish(sess, number_of_classes)
@@ -82,18 +87,19 @@ def train(get_examples, number_of_classes, model_name = 'model', epochs = 50):
         train_op = sess.graph.get_operation_by_name('mymodel/train_op')
 
         # The training loop.
-        for _ in range(epochs):
+        for epoch in range(epochs):
             (features, labels) = get_examples(shuf=True)
             [num_steps, loss, _] = sess.run(
                 [global_step_tensor, loss_tensor, train_op],
                 feed_dict={features_tensor: features, labels_tensor: labels})
             print('Step %d: loss %g' % (num_steps, loss))
-            saver = tf.train.Saver()
-            saver.save(sess, model_name_to_save)            
+            
+            model_id = '%s_%s_%s-%s' % (model_name, number_of_samples, epoch, epochs)
+            saveModel(model_id)
 
 def predict(model_name, number_of_classes, features):
-    #model_name_to_load = './model/%s/model' % (model_name)   
-    model_name_to_load = './model/%s' % (model_name)   
+    model_name_to_load = './model/%s/model' % (model_name)   
+    #model_name_to_load = './model/%s' % (model_name)   
     
     with tf.Graph().as_default(), tf.Session() as sess:
         logits, pred = loadVGGish(sess, number_of_classes)
