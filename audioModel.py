@@ -59,7 +59,7 @@ def loadVGGish(sess, number_of_classes):
     vggish_slim.load_vggish_slim_checkpoint(sess, './vggish_model.ckpt') 
     return logits, pred
 
-def saveModel(model_name):
+def saveModel(sess, model_name):
     model_folder = './model/%s' % model_name
     model_name_to_save = '%s/model' % (model_folder)    
     if not os.path.isdir(model_folder):
@@ -95,7 +95,7 @@ def train(get_examples, number_of_classes, model_name='foo', epochs = 50):
             print('Step %d: loss %g' % (num_steps, loss))
             
             model_id = '%s_%s-%s' % (model_name, epoch, epochs)
-            saveModel(model_id)
+            saveModel(sess, model_id)
 
 def predict(model_name, number_of_classes, features):
     model_name_to_load = './model/%s/model' % (model_name)   
