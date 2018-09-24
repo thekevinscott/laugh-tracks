@@ -62,13 +62,12 @@ def getNoise(shuf = True, number_of_samples = 1, use_cache = False):
     return (features, labels)
 
 def getFilePathsForClass(c):
-    dirs = readFolder('samples/%s' % (c))
+    files = readFolder('samples/%s' % (c))
     collected_files = []
-    for d in dirs:
-        files = readFolder('samples/%s/%s' % (c, d))
-
-        for file in files:
-            collected_files.append('samples/%s/%s/%s' % (c, d, file))
+    for file in files:
+        path = 'samples/%s/%s' % (c, file)
+        #print(path)
+        collected_files.append(path)
     return collected_files
             
 def getSampleForFile(file):
@@ -91,7 +90,8 @@ def getSamplesForFiles(files, number_of_samples, use_full_files = True, log=Fals
     else:
         total_files = files[:number_of_samples]
     if log:
-        print('reading %i files' % (len(total_files)))        
+        print('reading %i files' % (len(total_files))) 
+        print(total_files)
     for file in total_files:
         audio = getSampleForFile(file)
         sample = np.append(sample, audio)
@@ -140,7 +140,7 @@ def getSamples(classes, shuf = True, number_of_samples = None, use_full_files = 
     labels = [label for (_, label) in labeled_examples]
     return (features, labels)
 
-def getLaughTracks(number_of_samples = 1, shuf = True, use_cache = True, use_full_files = False, log=True):
+def getLaughTracks(number_of_samples = 1, shuf = True, use_cache = False, use_full_files = False, log=True):
     features_name = 'checkpoints/features_%s.npy' % (number_of_samples)
     labels_name = 'checkpoints/labels_%s.npy' % (number_of_samples)
     
@@ -150,7 +150,7 @@ def getLaughTracks(number_of_samples = 1, shuf = True, use_cache = True, use_ful
         labels = np.load(labels_name)        
     else:
         #print('not using cache for laugh tracks')
-        (features, labels) = getSamples(['laughter', 'notlaughter'], shuf = False, number_of_samples = number_of_samples, use_full_files = use_full_files, log=log)
+        (features, labels) = getSamples(['laughter', 'notlaughter'], shuf = shuf, number_of_samples = number_of_samples, use_full_files = use_full_files, log=log)
         np.save('checkpoints/features_%s.npy' % (number_of_samples), features)
         np.save('checkpoints/labels_%s.npy' % (number_of_samples), labels)
 

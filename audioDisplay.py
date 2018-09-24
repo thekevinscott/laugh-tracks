@@ -30,7 +30,7 @@ def printResults(preds):
         return sess.run(tf.argmax(input=preds, axis=1))
 
 def displayAudioWithPredictions(path, preds):
-    id = 'i%i' % random.randint(1,100001)
+    id = 'i%i' % random.randint(1,10000001)
     tdsPred = ''
     tdsTime = ''
     formattedPreds = printResults(preds)
@@ -41,7 +41,7 @@ def displayAudioWithPredictions(path, preds):
         
     script = '''
     <script type="text/javascript">
-    function update(pos) {
+    function update%s(pos) {
         const audio = document.getElementById('player-%s');
         const table = document.getElementById('table-%s');
         times = table.querySelector('tr:first-child');
@@ -58,7 +58,7 @@ def displayAudioWithPredictions(path, preds):
         }
     }
     </script>
-    ''' % (id, id)
+    ''' % (id, id, id)
     style = '''
     <style type="text/css">
     body .rendered_html table {
@@ -78,7 +78,7 @@ def displayAudioWithPredictions(path, preds):
         
     html = '''
     {style}
-    <audio ontimeupdate="update()" src="{path}" id="player-{id}" controls />
+    <audio ontimeupdate="update{id}()" src="{path}" id="player-{id}" controls />
     <table id="table-{id}"><tr>{tdsTime}</tr><tr>{tdsPred}</tr></table>
     {script}
 '''.format(**args)

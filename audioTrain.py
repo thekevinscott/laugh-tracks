@@ -33,7 +33,7 @@ flags.DEFINE_string(
 
 FLAGS = flags.FLAGS
 
-def trainAndSaveAndPredict(test_data, number_of_classes = 2, number_of_samples = 1, epochs = 5, getData = getLaughTracks, use_cache = True, log = True):
+def trainAndSaveAndPredict(test_data, number_of_classes = 2, number_of_samples = 1, epochs = 5, getData = getLaughTracks, use_cache = False, log = True):
     def curriedGetSamples(shuf):
         return getData(number_of_samples = number_of_samples, shuf = shuf, use_cache = use_cache, log = log)
     model_name = 'model_%s_%s' % (number_of_samples, epochs)
@@ -56,7 +56,7 @@ def trainForNoise(number_of_samples=5, epochs=5):
     printResults(preds, [0, 0, 1, 1, 2, 2])
     
 def trainForLaughter(number_of_samples=5, epochs=5):  
-    use_cache = True
+    use_cache = False
     print('training on laughter and not laughter')
     (features, labels) = getLaughTracks(shuf=False, number_of_samples = 2, use_cache = use_cache, use_full_files = False, log=False)
     preds = trainAndSaveAndPredict(features, number_of_classes = 2, number_of_samples = number_of_samples, epochs = epochs, getData = getLaughTracks, use_cache = use_cache, log = False)
