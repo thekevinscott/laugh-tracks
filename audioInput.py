@@ -82,7 +82,7 @@ def getFileAsVggishInput(sample):
 def getSamplesForFiles(files, number_of_samples, use_full_files = True, log=False):
     sample = np.array([])
     if log:
-        print('umber of samples', number_of_samples)
+        print('number of samples', number_of_samples)
 
     # We'll never have more files than we request samples,
     # BUT we might want an accurate reading of how many we're leaving on the table
@@ -103,7 +103,9 @@ def getSamplesForFiles(files, number_of_samples, use_full_files = True, log=Fals
         print('leaving behind %i samples' % (len(origVggishInput[number_of_samples:])))
     return vggishInput
 
-def getData(files, number_of_samples, use_full_files, log, arr):
+def getData(files, number_of_samples, shuf, use_full_files, log, arr):
+    if shuf:
+        shuffle(files)
     examples = getSamplesForFiles(files, number_of_samples, use_full_files, log)
     labels = np.array([arr] * examples.shape[0])
     
@@ -123,7 +125,7 @@ def getSamples(classes, shuf = True, number_of_samples = None, use_full_files = 
     #print('collecting samples')
     for idx, cls in enumerate(classes):
         files = getFilePathsForClass(cls)
-        x, y = getData(files, number_of_samples, use_full_files, log, getOneHot(len(classes), idx))
+        x, y = getData(files, number_of_samples, shuf, use_full_files, log, getOneHot(len(classes), idx))
         exes.append(x)
         whys.append(y)
     
