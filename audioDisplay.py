@@ -15,6 +15,10 @@ import IPython.display as ipd
 from IPython.core.display import display, HTML
 import random
 from audioUtils import readFolder
+import matplotlib.pyplot as plt
+import numpy as np
+import wave
+import sys
 
 def displayAudio(path):
     display(ipd.Audio(path))
@@ -29,13 +33,25 @@ def printResults(preds):
     with tf.Graph().as_default(), tf.Session() as sess:
         return sess.run(tf.argmax(input=preds, axis=1))
 
+def displayWaveform(path):
+    spf = wave.open(path,'r')
+
+    #Extract Raw Audio from Wav File
+    signal = spf.readframes(-1)
+    signal = np.fromstring(signal, 'Int16')
+
+    plt.figure(1)
+    plt.title(path)
+    plt.plot(signal)
+    plt.show()
+
 def displayAudioWithPredictions(path, preds):
     id = 'i%i' % random.randint(1,10000001)
     tdsPred = ''
     tdsTime = ''
     formattedPreds = printResults(preds)
     for idx, pred in enumerate(formattedPreds):
-        time = idx/2
+        time = round(idx/2 * vggish_params.EXAMPLE_WINDOW_SECONDS, 2)
         tdsPred = tdsPred + '<td>%s</td>' % pred
         tdsTime = tdsTime + '<td>%s</td>' % time
         
@@ -61,12 +77,17 @@ def displayAudioWithPredictions(path, preds):
     ''' % (id, id, id)
     style = '''
     <style type="text/css">
+    body .rendered_html .table-container {
+        max-width: 600px;
+        overflow: scroll;
+    }
     body .rendered_html table {
         border-collapse: collapse
     }
     body .rendered_html table td {
         border: 1px solid #EEE;
         background: white;
+        padding: 0;
     }
     body .rendered_html table td.highlighted {
         border: 1px solid #CCC;
@@ -79,7 +100,9 @@ def displayAudioWithPredictions(path, preds):
     html = '''
     {style}
     <audio ontimeupdate="update{id}()" src="{path}" id="player-{id}" controls />
+    <div class="table-container">
     <table id="table-{id}"><tr>{tdsTime}</tr><tr>{tdsPred}</tr></table>
+    </div>
     {script}
 '''.format(**args)
     display(HTML(html))

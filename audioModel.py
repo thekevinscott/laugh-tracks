@@ -9,7 +9,7 @@ import vggish_input
 import vggish_params
 import vggish_slim
 from pydub import AudioSegment
-from audioUtils import readFolder
+from audioUtils import readFolder, shell
 
 slim = tf.contrib.slim
 
@@ -61,7 +61,9 @@ def loadVGGish(sess, number_of_classes):
     
     
 def train(get_examples, number_of_classes, model_name = 'model', epochs = 50):
-    model_name_to_save = './model/%s' % (model_name)    
+    #model_folder = './model/%s' % model_name
+    model_name_to_save = '%s/model' % (model_folder)    
+    #shell('mkdir %s' % (model_folder))
     with tf.Graph().as_default(), tf.Session() as sess:
         # Define VGGish.
         logits, pred = loadVGGish(sess, number_of_classes)
@@ -90,8 +92,8 @@ def train(get_examples, number_of_classes, model_name = 'model', epochs = 50):
             saver.save(sess, model_name_to_save)            
 
 def predict(model_name, number_of_classes, features):
+    #model_name_to_load = './model/%s/model' % (model_name)   
     model_name_to_load = './model/%s' % (model_name)   
-
     
     with tf.Graph().as_default(), tf.Session() as sess:
         logits, pred = loadVGGish(sess, number_of_classes)

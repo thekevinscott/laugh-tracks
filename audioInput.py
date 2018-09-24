@@ -73,8 +73,8 @@ def getFilePathsForClass(c):
         collected_files.append(path)
     return collected_files
             
-def getSampleForFile(file, number_of_samples):
-    audio = AudioSegment.from_file(file).get_array_of_samples()[0:(SAMPLE_RATE * number_of_samples)]
+def getSampleForFile(file, seconds):
+    audio = AudioSegment.from_file(file).get_array_of_samples()[0:round(SAMPLE_RATE * seconds)]
     return audio
 
 # accepts a numpy array representing a single audio file, or multiple files concat'ed together
