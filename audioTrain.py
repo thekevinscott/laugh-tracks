@@ -12,8 +12,12 @@ from pydub import AudioSegment
 from audioModel import predict, train
 from audioInput import getLaughTracks, getNoise
 slim = tf.contrib.slim
-!wget https://storage.googleapis.com/audioset/vggish_model.ckpt
-!wget https://storage.googleapis.com/audioset/vggish_pca_params.npz
+
+if not os.path.isfile('vggish_model.ckpt'):
+    wget https://storage.googleapis.com/audioset/vggish_model.ckpt
+
+if not os.path.isfile('vggish_pca_params.npz'):
+    wget https://storage.googleapis.com/audioset/vggish_pca_params.npz
 
 
 flags = tf.app.flags
