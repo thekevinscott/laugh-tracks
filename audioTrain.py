@@ -36,7 +36,7 @@ FLAGS = flags.FLAGS
 def trainAndSaveAndPredict(test_data, number_of_classes = 2, number_of_samples = 1, epochs = 5, getData = getLaughTracks, use_cache = False, log = True):
     def curriedGetSamples(shuf):
         return getData(number_of_samples = number_of_samples, shuf = shuf, use_cache = use_cache, log = log)
-    model_name = 'model_%s_%s' % (number_of_samples, epochs)
+    model_name = 'model_%s' % (number_of_samples)
     preds = train(curriedGetSamples, number_of_classes, model_name = model_name, epochs = epochs)
     
 

@@ -94,7 +94,7 @@ def train(get_examples, number_of_classes, model_name='foo', epochs = 50):
                 feed_dict={features_tensor: features, labels_tensor: labels})
             print('Step %d: loss %g' % (num_steps, loss))
             
-            model_id = '%s_%s_%s-%s' % (model_name, number_of_samples, epoch, epochs)
+            model_id = '%s_%s-%s' % (model_name, epoch, epochs)
             saveModel(model_id)
 
 def predict(model_name, number_of_classes, features):
