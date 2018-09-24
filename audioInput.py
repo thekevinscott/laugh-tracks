@@ -8,10 +8,13 @@ import os
 import vggish_input
 import vggish_params
 import vggish_slim
+import math
 from pydub import AudioSegment
 from audioUtils import readFolder
 
 slim = tf.contrib.slim
+
+SAMPLE_RATE = 44100
 
 def getNoise(shuf = True, number_of_samples = 1, use_cache = False):
     """Returns a shuffled batch of examples of all audio classes.
@@ -70,43 +73,34 @@ def getFilePathsForClass(c):
         collected_files.append(path)
     return collected_files
             
-def getSampleForFile(file):
-    return AudioSegment.from_file(file).get_array_of_samples()
+def getSampleForFile(file, number_of_samples):
+    audio = AudioSegment.from_file(file).get_array_of_samples()[0:(SAMPLE_RATE * number_of_samples)]
+    return audio
 
 # accepts a numpy array representing a single audio file, or multiple files concat'ed together
 def getFileAsVggishInput(sample):
-    return vggish_input.waveform_to_examples(sample, 44100)
+    return vggish_input.waveform_to_examples(sample, SAMPLE_RATE)
 
 # append every audio file into one enormous massive audio file
-def getSamplesForFiles(files, number_of_samples, use_full_files = True, log=False):
+def getSamplesForFiles(files, number_of_samples, log=False):
     sample = np.array([])
     if log:
-        print('number of samples', number_of_samples)
-
-    # We'll never have more files than we request samples,
-    # BUT we might want an accurate reading of how many we're leaving on the table
-    if use_full_files:
-        total_files = files
-    else:
-        total_files = files[:number_of_samples]
-    if log:
-        print('reading %i files' % (len(total_files))) 
-        print(total_files)
-    for file in total_files:
-        audio = getSampleForFile(file)
-        sample = np.append(sample, audio)
+        print('number of samples', number_of_samples, 'reading %i files' % (len(files)), files[0:3])
         
-    origVggishInput = getFileAsVggishInput(sample)
-    vggishInput = origVggishInput[0:number_of_samples]
-    if log:
-        print('returning %i samples' % (number_of_samples))
-        print('leaving behind %i samples' % (len(origVggishInput[number_of_samples:])))
-    return vggishInput
+    for file in files:
+        current_sample_size = math.ceil(sample.shape[0] / SAMPLE_RATE)
+        if current_sample_size < number_of_samples:
+            remaining_samples = number_of_samples - math.ceil(sample.shape[0] / SAMPLE_RATE)
+            audio = getSampleForFile(file, remaining_samples)
+            sample = np.append(sample, audio)
+            #print(sample.shape[0] / SAMPLE_RATE)
+        
+    return getFileAsVggishInput(sample)
 
-def getData(files, number_of_samples, shuf, use_full_files, log, arr):
+def getData(files, number_of_samples, shuf, log, arr):
     if shuf:
         shuffle(files)
-    examples = getSamplesForFiles(files, number_of_samples, use_full_files, log)
+    examples = getSamplesForFiles(files, number_of_samples, log)
     labels = np.array([arr] * examples.shape[0])
     
     return (examples, labels)
@@ -117,15 +111,15 @@ def getOneHot(class_num, idx):
     return arr
 
 def processWavFile(file, log = True):
-    return getSamplesForFiles([file], 99999999, use_full_files = True, log = log)
+    return getSamplesForFiles([file], 99999999, log = log)
 
-def getSamples(classes, shuf = True, number_of_samples = None, use_full_files = False, log=False):
+def getSamples(classes, shuf = True, number_of_samples = None, log=False):
     exes = []
     whys = []
     #print('collecting samples')
     for idx, cls in enumerate(classes):
         files = getFilePathsForClass(cls)
-        x, y = getData(files, number_of_samples, shuf, use_full_files, log, getOneHot(len(classes), idx))
+        x, y = getData(files, number_of_samples, shuf, log, getOneHot(len(classes), idx))
         exes.append(x)
         whys.append(y)
     
@@ -140,7 +134,7 @@ def getSamples(classes, shuf = True, number_of_samples = None, use_full_files = 
     labels = [label for (_, label) in labeled_examples]
     return (features, labels)
 
-def getLaughTracks(number_of_samples = 1, shuf = True, use_cache = False, use_full_files = False, log=True):
+def getLaughTracks(number_of_samples = 1, shuf = True, use_cache = False, log=True):
     features_name = 'checkpoints/features_%s.npy' % (number_of_samples)
     labels_name = 'checkpoints/labels_%s.npy' % (number_of_samples)
     
@@ -150,7 +144,7 @@ def getLaughTracks(number_of_samples = 1, shuf = True, use_cache = False, use_fu
         labels = np.load(labels_name)        
     else:
         #print('not using cache for laugh tracks')
-        (features, labels) = getSamples(['laughter', 'notlaughter'], shuf = shuf, number_of_samples = number_of_samples, use_full_files = use_full_files, log=log)
+        (features, labels) = getSamples(['laughter', 'notlaughter'], shuf = shuf, number_of_samples = number_of_samples, log=log)
         np.save('checkpoints/features_%s.npy' % (number_of_samples), features)
         np.save('checkpoints/labels_%s.npy' % (number_of_samples), labels)
 

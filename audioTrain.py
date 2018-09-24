@@ -58,7 +58,7 @@ def trainForNoise(number_of_samples=5, epochs=5):
 def trainForLaughter(number_of_samples=5, epochs=5):  
     use_cache = False
     print('training on laughter and not laughter')
-    (features, labels) = getLaughTracks(shuf=False, number_of_samples = 2, use_cache = use_cache, use_full_files = False, log=False)
+    (features, labels) = getLaughTracks(shuf=False, number_of_samples = 2, use_cache = use_cache, log=False)
     preds = trainAndSaveAndPredict(features, number_of_classes = 2, number_of_samples = number_of_samples, epochs = epochs, getData = getLaughTracks, use_cache = use_cache, log = False)
     printResults(preds, [0, 0, 1, 1])
     

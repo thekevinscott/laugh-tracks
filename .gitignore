@@ -95,7 +95,7 @@ ENV/
 .DS_Store
 
 # samples
-# checkpoints
+checkpoints
 model
 data
 
