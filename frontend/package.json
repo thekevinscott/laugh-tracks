@@ -91,6 +91,8 @@
     "@babel/core": "^7.1.0",
     "@babel/plugin-proposal-class-properties": "^7.1.0",
     "@babel/preset-env": "^7.1.0",
-    "@babel/preset-react": "^7.0.0"
+    "@babel/preset-react": "^7.0.0",
+    "gh-pages": "^2.0.0",
+    "gh-pages-deploy": "^0.5.0"
   }
 }
