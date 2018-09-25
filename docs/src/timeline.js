@@ -448,10 +448,9 @@ export default class TimelinePlugin {
           // positioning.push([i, marker.label, 0.5]);
 
           const curPixel = pixelsPerSecond * timeInterval * marker.timestamp;
-          console.log('ok!', curPixel);
           // this.fillRect(0, 0, 1, height1);
           this.fillText(
-            'foo',
+            marker.label,
             curPixel,
             // curPixel + this.params.labelPadding * this.pixelRatio,
             15,
