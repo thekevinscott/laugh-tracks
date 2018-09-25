@@ -47,7 +47,6 @@
   "scripts": {
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",
-    "deploy": "gh-pages -d frontend-dist/static/js",
     "test": "node scripts/test.js --env=jsdom"
   },
   "jest": {
@@ -91,8 +90,6 @@
     "@babel/core": "^7.1.0",
     "@babel/plugin-proposal-class-properties": "^7.1.0",
     "@babel/preset-env": "^7.1.0",
-    "@babel/preset-react": "^7.0.0",
-    "gh-pages": "^2.0.0",
-    "gh-pages-deploy": "^0.5.0"
+    "@babel/preset-react": "^7.0.0"
   }
 }
