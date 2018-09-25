@@ -24,17 +24,11 @@ class App extends Component {
         TimelinePlugin.create({
           container: `#timeline-${this.state.id}`,
           timeInterval: 1,
-          markers: [{
-            label: 'foo',
-            timestamp: 2,
-          }, {
-            label: 'bar',
-            timestamp: 5,
-          }],
+          markers: this.props.markers || [],
         }),
       ]
     });
-    wavesurfer.load('/test.wav');
+    wavesurfer.load(this.props.audio);
     wavesurfer.on('ready', () => {
       this.setState({
         ready: true,
