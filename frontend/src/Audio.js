@@ -1,29 +1,90 @@
 import WaveSurfer from 'wavesurfer.js';
-import TimelinePlugin from 'wavesurfer.js/src/plugin/timeline.js';
+import TimelinePlugin from './timeline';
 import React, { Component } from 'react';
 
 class App extends Component {
-  shouldComponentUpdate() {
-    return false;
+  constructor(props) {
+    super(props);
+    this.state = {
+      id: `a-${Math.round(Math.random() * 10000)}`,
+      ready: false,
+      playing: false,
+    };
   }
+
+  // shouldComponentUpdate() {
+    // return false;
+  // }
 
   componentDidMount() {
     const wavesurfer = WaveSurfer.create({
-      container: "#app",
+      container: `#${this.state.id}`,
       waveColor: 'violet',
       plugins: [
-        // TimelinePlugin.create({
-        //   // container: timeline,
-        //   // markers: annotations,
-        // }),
+        TimelinePlugin.create({
+          container: `#timeline-${this.state.id}`,
+          timeInterval: 1,
+          markers: [{
+            label: 'foo',
+            timestamp: 2,
+          }, {
+            label: 'bar',
+            timestamp: 5,
+          }],
+        }),
       ]
     });
     wavesurfer.load('/test.wav');
+    wavesurfer.on('ready', () => {
+      this.setState({
+        ready: true,
+      });
+
+      wavesurfer.on('pause', () => {
+        this.setState({
+          playing: false,
+        });
+      });
+      wavesurfer.on('play', () => {
+        this.setState({
+          playing: true,
+        });
+      });
+    });
+    this.wavesurfer = wavesurfer;
+  }
+
+  playPause = () => {
+    this.wavesurfer.playPause();
+  }
+
+  zoom = (e) => {
+    const zoomLevel = Number(e.target.value);
+    this.wavesurfer.zoom(zoomLevel);
   }
 
   render() {
     return (
-      <div id="app" />
+      <div>
+        <div id={this.state.id} />
+        <div id={`timeline-${this.state.id}`} />
+        <div style={{ display: 'flex' }}>
+          <button
+            disabled={!this.state.ready}
+            onClick={() => this.playPause()}
+          >
+            {this.state.playing ? 'pause' : 'play'}
+          </button>
+          <input
+            style={{ flex: 1 }}
+            type="range"
+            defaultValue="1"
+            min="1"
+            max="200"
+            onChange={this.zoom}
+          />
+        </div>
+      </div>
     );
   }
 }
