@@ -59,17 +59,23 @@ def loadVGGish(sess, number_of_classes):
     vggish_slim.load_vggish_slim_checkpoint(sess, './vggish_model.ckpt') 
     return logits, pred
 
-def saveModel(sess, model_name):
+def saveModel(sess, model_name, model_id):
     model_folder = './model/%s' % model_name
-    model_name_to_save = '%s/model' % (model_folder)    
+    model_folder_id = '%s/%s' % (model_folder, model_id)    
     if not os.path.isdir(model_folder):
         os.mkdir(model_folder)
+    if not os.path.isdir(model_folder_id):
+        os.mkdir(model_folder_id)        
     saver = tf.train.Saver()
-    saver.save(sess, model_name_to_save)
+    path = '%s/model' % model_folder_id
+    print('saving model', path)
+    saver.save(sess, path)
     
-def deleteModel(model_name):
-    model_folder = './model/%s' % model_name
-    shell('rm -rf %s' % model_folder)
+def deleteModel(model_name, model_id):
+    path = './model/%s/%s' % (model_name, model_id)
+    if os.path.isdir(path):    
+        #print('deleting model', path)
+        shell('rm -rf %s' % path)
     
 def train(get_examples, number_of_classes, model_name='foo', epochs = 50):
     with tf.Graph().as_default(), tf.Session() as sess:
@@ -97,12 +103,11 @@ def train(get_examples, number_of_classes, model_name='foo', epochs = 50):
                 feed_dict={features_tensor: features, labels_tensor: labels})
             print('Step %d: loss %g' % (num_steps, loss))
             
-            model_id = '%s_%s-%s' % (model_name, epoch + 1, epochs)
-            saveModel(sess, model_id)
-            deleteModel('%s_%s-%s' % (model_name, epoch, epochs))
+            saveModel(sess, model_name, '%s_%s' % (epoch + 1, epochs))
+            deleteModel(model_name, '%s_%s' % (epoch, epochs))
 
 def predict(model_name, number_of_classes, features):
-    print('number of classes', number_of_classes)
+    #print('number of classes', number_of_classes)
     model_name_to_load = './model/%s/model' % (model_name)   
     print('loading', model_name_to_load)
     #model_name_to_load = './model/%s' % (model_name)   

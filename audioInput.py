@@ -16,7 +16,7 @@ slim = tf.contrib.slim
 
 SAMPLE_RATE = 44100
 
-def getNoise(shuf = True, number_of_samples = 1, use_cache = False, log=False):
+def getNoise(shuf = True, number_of_samples = 1, log=False):
     """Returns a shuffled batch of examples of all audio classes.
 
     Note that this is just a toy function because this is a simple demo intended
@@ -134,19 +134,11 @@ def getSamples(classes, shuf = True, number_of_samples = None, log=False):
     labels = [label for (_, label) in labeled_examples]
     return (features, labels)
 
-def getLaughTracks(number_of_samples = 1, shuf = True, use_cache = False, log=True):
+def getLaughTracks(number_of_samples = 1, shuf = True, log=True):
     features_name = 'checkpoints/features_%s.npy' % (number_of_samples)
     labels_name = 'checkpoints/labels_%s.npy' % (number_of_samples)
     
-    if use_cache and os.path.isfile(features_name) and os.path.isfile(labels_name):
-        #print('using cache for laugh tracks')
-        features = np.load(features_name)
-        labels = np.load(labels_name)        
-    else:
-        #print('not using cache for laugh tracks')
-        (features, labels) = getSamples(['laughter', 'notlaughter'], shuf = shuf, number_of_samples = number_of_samples, log=log)
-        np.save('checkpoints/features_%s.npy' % (number_of_samples), features)
-        np.save('checkpoints/labels_%s.npy' % (number_of_samples), labels)
+    (features, labels) = getSamples(['laughter', 'notlaughter'], shuf = shuf, number_of_samples = number_of_samples, log=log)
 
     labeled_examples = list(zip(features, labels))
     if shuf:

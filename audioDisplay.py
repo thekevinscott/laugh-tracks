@@ -19,6 +19,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import wave
 import sys
+import random
+import json
 
 def displayAudio(path):
     display(ipd.Audio(path))
@@ -33,76 +35,54 @@ def printResults(preds):
     with tf.Graph().as_default(), tf.Session() as sess:
         return sess.run(tf.argmax(input=preds, axis=1))
 
-def displayWaveform(path):
-    spf = wave.open(path,'r')
+def predictAudio(path, model_name, labels, number_of_classes = 2):
+    model = getModel(model_name)
+    preds = predict(model, number_of_classes, processWavFile(path, log=False))
+    prettyPreds = printResults(preds)
+    translatedPreds = []    
+    for p in prettyPreds:
+        translatedPreds.append(labels[p])
+    displayWaveform(path, translatedPreds)
+    return prettyPreds
 
-    #Extract Raw Audio from Wav File
-    signal = spf.readframes(-1)
-    signal = np.fromstring(signal, 'Int16')
-
-    plt.figure(1)
-    plt.title(path)
-    plt.plot(signal)
-    plt.show()
-
-def displayAudioWithPredictions(path, preds):
-    id = 'i%i' % random.randint(1,10000001)
-    tdsPred = ''
-    tdsTime = ''
-    formattedPreds = printResults(preds)
-    for idx, pred in enumerate(formattedPreds):
-        time = round(idx/2 * vggish_params.EXAMPLE_WINDOW_SECONDS, 2)
-        tdsPred = tdsPred + '<td>%s</td>' % pred
-        tdsTime = tdsTime + '<td>%s</td>' % time
+def getModel(path):
+    files = readFolder('model/%s' % path)
+    if len(files) > 0:
+        return '%s/%s' % (path, files[0])
+    return None
+    
+def displayWaveform(path, preds):
+    id = 'i%i' % random.randint(1,10000001)    
         
+    preds = json.dumps(preds)
     script = '''
+    <script src="https://thekevinscott.github.io/laugh-tracks/frontend-dist/static/js/main.8e06b391.js"></script>
     <script type="text/javascript">
-    function update%s(pos) {
-        const audio = document.getElementById('player-%s');
-        const table = document.getElementById('table-%s');
-        times = table.querySelector('tr:first-child');
-        preds = table.querySelector('tr:last-child');  
-
-        const currentCell = Math.floor(audio.currentTime * 2);
-        for (let i = 0; i < table.rows[0].cells.length; i++) {
-            const cell = table.rows[0].cells[i];
-            if (i === currentCell) {
-                cell.className = 'highlighted';
-            } else {
-                cell.className = '';            
-            }
-        }
-    }
+        var jsonPreds = %s;
+        var predMarkers = [];
+        jsonPreds.forEach(function(pred, i) {
+            predMarkers.push({
+                label: pred,
+                timestamp: %f * i,
+            })
+        })
+        waveform.default(document.getElementById('%s'), '%s', predMarkers);
     </script>
-    ''' % (id, id, id)
+    ''' % (preds, vggish_params.EXAMPLE_WINDOW_SECONDS, id, path)
     style = '''
     <style type="text/css">
-    body .rendered_html .table-container {
-        max-width: 600px;
-        overflow: scroll;
-    }
-    body .rendered_html table {
-        border-collapse: collapse
-    }
-    body .rendered_html table td {
-        border: 1px solid #EEE;
-        background: white;
-        padding: 0;
-    }
-    body .rendered_html table td.highlighted {
-        border: 1px solid #CCC;
-        background: yellow;
-    }    
+ #waveform {
+ width: 200px;
+ height: 200px;
+ background: #EEE;
+ }
     </style>
     '''
-    args = {'tdsTime':tdsTime, 'tdsPred':tdsPred, 'id':id, 'path':path, 'script': script, 'style': style}
+    args = {'id':id, 'path':path, 'script': script, 'style': style}
         
     html = '''
     {style}
-    <audio ontimeupdate="update{id}()" src="{path}" id="player-{id}" controls />
-    <div class="table-container">
-    <table id="table-{id}"><tr>{tdsTime}</tr><tr>{tdsPred}</tr></table>
-    </div>
+    <div id="{id}"></div>
     {script}
 '''.format(**args)
-    display(HTML(html))
+    display(HTML(html)) 

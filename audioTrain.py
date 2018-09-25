@@ -33,13 +33,13 @@ flags.DEFINE_string(
 
 FLAGS = flags.FLAGS
 
-def trainAndSaveAndPredict(test_data, model, number_of_classes = 2, number_of_samples = 1, epochs = 5, getData = getLaughTracks, use_cache = True, log = True):
+def trainAndSaveAndPredict(test_data, model, number_of_classes = 2, number_of_samples = 1, epochs = 5, getData = getLaughTracks, log = True):
     model_name = '%s_%s' % (model, number_of_samples)
     def curriedGetSamples(shuf):
-        return getData(number_of_samples = number_of_samples, shuf = shuf, use_cache = use_cache, log = log)
+        return getData(number_of_samples = number_of_samples, shuf = shuf, log = log)
     preds = train(curriedGetSamples, number_of_classes, model_name = model_name, epochs = epochs)
     
-    return predict('%s_%s-%s' % (model_name, epochs, epochs), number_of_classes, test_data)
+    return predict('%s/%s_%s' % (model_name, epochs, epochs), number_of_classes, test_data)
 
 def printResults(preds, expected = None): 
     with tf.Graph().as_default(), tf.Session() as sess:
@@ -48,17 +48,15 @@ def printResults(preds, expected = None):
         print('expected results', expected)
 
 def trainForNoise(number_of_samples=5, epochs=5):
-    use_cache = False
     print('training on noise, sin, and constant waves')
     (features, labels) = getNoise(shuf=False, number_of_samples = 2)
     preds = trainAndSaveAndPredict(features, 'noise', number_of_classes = 3, number_of_samples = number_of_samples, epochs = epochs, getData = getNoise)
     printResults(preds, [0, 0, 1, 1, 2, 2])
     
 def trainForLaughter(number_of_samples=5, epochs=5):  
-    use_cache = False
     print('training on laughter and not laughter')
-    (features, labels) = getLaughTracks(shuf=False, number_of_samples = 2, use_cache = use_cache, log=False)
-    preds = trainAndSaveAndPredict(features, number_of_classes = 2, number_of_samples = number_of_samples, epochs = epochs, getData = getLaughTracks, use_cache = use_cache, log = False)
+    (features, labels) = getLaughTracks(shuf=False, number_of_samples = 2, log=False)
+    preds = trainAndSaveAndPredict(features, number_of_classes = 2, number_of_samples = number_of_samples, epochs = epochs, getData = getLaughTracks, log = False)
     printResults(preds, [0, 0, 1, 1])
     
 def main(_):
