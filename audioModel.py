@@ -94,11 +94,12 @@ def train(get_examples, number_of_classes, model_name='foo', epochs = 50):
                 feed_dict={features_tensor: features, labels_tensor: labels})
             print('Step %d: loss %g' % (num_steps, loss))
             
-            model_id = '%s_%s-%s' % (model_name, epoch, epochs)
+            model_id = '%s_%s-%s' % (model_name, epoch + 1, epochs)
             saveModel(sess, model_id)
 
 def predict(model_name, number_of_classes, features):
     model_name_to_load = './model/%s/model' % (model_name)   
+    print('loading', model_name_to_load)
     #model_name_to_load = './model/%s' % (model_name)   
     
     with tf.Graph().as_default(), tf.Session() as sess:
