@@ -47,6 +47,7 @@
   "scripts": {
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",
+    "deploy": "gh-pages -d frontend-dist/static/js",
     "test": "node scripts/test.js --env=jsdom"
   },
   "jest": {
