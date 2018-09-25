@@ -67,8 +67,11 @@ def saveModel(sess, model_name):
     saver = tf.train.Saver()
     saver.save(sess, model_name_to_save)
     
+def deleteModel(model_name):
+    model_folder = './model/%s' % model_name
+    shell('rm -rf %s' % model_folder)
+    
 def train(get_examples, number_of_classes, model_name='foo', epochs = 50):
-
     with tf.Graph().as_default(), tf.Session() as sess:
         # Define VGGish.
         logits, pred = loadVGGish(sess, number_of_classes)
@@ -96,8 +99,10 @@ def train(get_examples, number_of_classes, model_name='foo', epochs = 50):
             
             model_id = '%s_%s-%s' % (model_name, epoch + 1, epochs)
             saveModel(sess, model_id)
+            deleteModel('%s_%s-%s' % (model_name, epoch, epochs))
 
 def predict(model_name, number_of_classes, features):
+    print('number of classes', number_of_classes)
     model_name_to_load = './model/%s/model' % (model_name)   
     print('loading', model_name_to_load)
     #model_name_to_load = './model/%s' % (model_name)   

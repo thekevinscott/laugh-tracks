@@ -16,7 +16,7 @@ slim = tf.contrib.slim
 
 SAMPLE_RATE = 44100
 
-def getNoise(shuf = True, number_of_samples = 1, use_cache = False):
+def getNoise(shuf = True, number_of_samples = 1, use_cache = False, log=False):
     """Returns a shuffled batch of examples of all audio classes.
 
     Note that this is just a toy function because this is a simple demo intended
