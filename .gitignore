@@ -107,3 +107,5 @@ vggish_pca_params.npz.1
 floyd.yml
 .floydexpt
 .floydignore
+
+node_modules
