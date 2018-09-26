@@ -73,9 +73,12 @@ def getFilePathsForClass(c):
         collected_files.append(path)
     return collected_files
             
-def getSampleForFile(file, seconds):
-    audio = AudioSegment.from_file(file).get_array_of_samples()[0:round(SAMPLE_RATE * seconds)]
-    return audio
+def getSampleForFile(file, seconds = None):
+    audio = AudioSegment.from_file(file).set_channels(1)
+    if seconds == None:
+        return audio.get_array_of_samples()
+    
+    return audio.get_array_of_samples()[0:round(SAMPLE_RATE * seconds)]
 
 # accepts a numpy array representing a single audio file, or multiple files concat'ed together
 def getFileAsVggishInput(sample):
@@ -88,12 +91,16 @@ def getSamplesForFiles(files, number_of_samples, log=False):
         print('number of samples', number_of_samples, 'reading %i files' % (len(files)), files[0:3])
         
     for file in files:
-        current_sample_size = math.ceil(sample.shape[0] / SAMPLE_RATE)
-        if current_sample_size < number_of_samples:
-            remaining_samples = number_of_samples - math.ceil(sample.shape[0] / SAMPLE_RATE)
-            audio = getSampleForFile(file, remaining_samples)
+        if number_of_samples == None:
+            audio = getSampleForFile(file)
             sample = np.append(sample, audio)
-            #print(sample.shape[0] / SAMPLE_RATE)
+        else:
+            current_sample_size = math.ceil(sample.shape[0] / SAMPLE_RATE)
+            if current_sample_size < number_of_samples:
+                remaining_samples = number_of_samples - math.ceil(sample.shape[0] / SAMPLE_RATE)
+                audio = getSampleForFile(file, remaining_samples)
+                sample = np.append(sample, audio)
+                #print(sample.shape[0] / SAMPLE_RATE)
         
     return getFileAsVggishInput(sample)
 
@@ -111,7 +118,7 @@ def getOneHot(class_num, idx):
     return arr
 
 def processWavFile(file, log = True):
-    return getSamplesForFiles([file], 99999999, log = log)
+    return getSamplesForFiles([file], None, log = log)
 
 def getSamples(classes, shuf = True, number_of_samples = None, log=False):
     exes = []

@@ -37,13 +37,14 @@ def printResults(preds):
 
 def predictAudio(path, model_name, labels, number_of_classes = 2):
     model = getModel(model_name)
-    preds = predict(model, number_of_classes, processWavFile(path, log=False))
+    wavfile = processWavFile(path, log=False)
+    preds = predict(model, number_of_classes, wavfile)
     prettyPreds = printResults(preds)
     translatedPreds = []    
     for p in prettyPreds:
         translatedPreds.append(labels[p])
     displayWaveform(path, translatedPreds)
-    return prettyPreds
+    return prettyPreds, wavfile
 
 def getModel(path):
     files = readFolder('model/%s' % path)

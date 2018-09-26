@@ -6,10 +6,16 @@ import subprocess
 import numpy as np
 import math
 import os
-#import IPython.display as ipd
+import IPython.display as ipd
 
 def shell(cmd):
     subprocess.call(cmd, shell=True)
+    
+def stripSilenceInPlace(file, threshold_beneath_average = 30):
+    audio = stripSilenceFromAudio(file, threshold_beneath_average)
+    audio.export(file)
+    display(ipd.Audio(file))
+    return audio
 
 def stripSilenceFromAudio(file, threshold_beneath_average = 30):
     sound = AudioSegment.from_file(file)
