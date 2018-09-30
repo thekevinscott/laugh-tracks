@@ -12,14 +12,14 @@ def shell(cmd):
     subprocess.call(cmd, shell=True)
     
 def stripSilenceInPlace(file, threshold_beneath_average = 30):
-    audio = stripSilenceFromAudio(file, threshold_beneath_average)
+    audio = stripSilenceFromAudio(file, int(threshold_beneath_average))
     audio.export(file)
-    display(ipd.Audio(file))
+    #display(ipd.Audio(file))
     return audio
 
 def stripSilenceFromAudio(file, threshold_beneath_average = 30):
     sound = AudioSegment.from_file(file)
-    splitsound = split_on_silence(sound, silence_thresh=(sound.dBFS - threshold_beneath_average))
+    splitsound = split_on_silence(sound, silence_thresh=(sound.dBFS - int(threshold_beneath_average)))
     combined = AudioSegment.empty()
     for split in splitsound:
         combined += split

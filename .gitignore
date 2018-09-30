@@ -98,6 +98,9 @@ ENV/
 checkpoints
 model
 data
+play-data
+augmented_samples
+cache
 
 vggish_model.ckpt
 vggish_pca_params.npz

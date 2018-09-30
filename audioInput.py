@@ -1,7 +1,6 @@
 from __future__ import print_function
 
-from random import shuffle
-
+import random
 import numpy as np
 import tensorflow as tf
 import os
@@ -11,6 +10,8 @@ import vggish_slim
 import math
 from pydub import AudioSegment
 from audioUtils import readFolder
+import hashlib
+import pprint, pickle
 
 slim = tf.contrib.slim
 
@@ -57,12 +58,17 @@ def getNoise(shuf = True, number_of_samples = 1, log=False):
     all_labels = np.concatenate((sine_labels, const_labels, noise_labels))
     labeled_examples = list(zip(all_examples, all_labels))
     if shuf:
-        shuffle(labeled_examples)
+        random.shuffle(labeled_examples)
 
     # Separate and return the features and labels.
     features = [example for (example, _) in labeled_examples]
     labels = [label for (_, label) in labeled_examples]
     return (features, labels)
+
+
+def getHashForFiles(files, extra_string = ''):
+    hash_object = hashlib.md5(('%s' % extra_string).join(files).encode())
+    return '%s' % (hash_object.hexdigest())
 
 def getFilePathsForClass(c):
     files = readFolder('samples/%s' % (c))
@@ -89,7 +95,10 @@ def getSamplesForFiles(files, number_of_samples, log=False):
     sample = np.array([])
     if log:
         print('number of samples', number_of_samples, 'reading %i files' % (len(files)), files[0:3])
-        
+    
+    # if use cache is false, use the below
+    # if use cache is true, cache ALL files to disk, post vggish transform; then pop off appropriate sample
+
     for file in files:
         if number_of_samples == None:
             audio = getSampleForFile(file)
@@ -101,13 +110,33 @@ def getSamplesForFiles(files, number_of_samples, log=False):
                 audio = getSampleForFile(file, remaining_samples)
                 sample = np.append(sample, audio)
                 #print(sample.shape[0] / SAMPLE_RATE)
-        
+
     return getFileAsVggishInput(sample)
 
-def getData(files, number_of_samples, shuf, log, arr):
-    if shuf:
-        shuffle(files)
-    examples = getSamplesForFiles(files, number_of_samples, log)
+def getSamplesForFileWithOptionalCache(files, number_of_samples, log=False, use_cache = True):  
+    if use_cache == False:
+        return getSamplesForFiles(files, number_of_samples, log=log)
+    
+    filename = getHashForFiles(files, number_of_samples)
+    #print('using cache with file', filename)
+    cache_file = 'cache/%s.pkl' % filename
+    if not os.path.isdir('cache'):
+        os.mkdir('cache')
+    if not os.path.isfile(cache_file):
+        print('no cache file available, building one')
+        samples = getSamplesForFiles(files, number_of_samples, log=log)
+        output = open(cache_file, 'wb')
+        pickle.dump(samples, output)
+        output.close()
+
+    pkl_file = open(cache_file, 'rb')
+    data = pickle.load(pkl_file)
+    pkl_file.close()
+    return data
+
+def getData(files, number_of_samples, log, arr, use_cache = True):
+    #print('this is just shuffling files; it should shufle samples')
+    examples = getSamplesForFileWithOptionalCache(files, number_of_samples, log, use_cache = use_cache)
     labels = np.array([arr] * examples.shape[0])
     
     return (examples, labels)
@@ -123,35 +152,31 @@ def processWavFile(file, log = True):
 def getSamples(classes, shuf = True, number_of_samples = None, log=False):
     exes = []
     whys = []
+    foundFiles = {}
     #print('collecting samples')
     for idx, cls in enumerate(classes):
         files = getFilePathsForClass(cls)
-        x, y = getData(files, number_of_samples, shuf, log, getOneHot(len(classes), idx))
+        foundFiles[cls] = files
+        x, y = getData(files, number_of_samples, log, getOneHot(len(classes), idx))
         exes.append(x)
         whys.append(y)
     
-    all_examples = np.concatenate(exes)
-    all_labels = np.concatenate(whys)
-    labeled_examples = list(zip(all_examples, all_labels))
-    if shuf:
-        shuffle(labeled_examples)
+    features = np.concatenate(exes)
+    labels = np.concatenate(whys)
+    if shuf == True:
+        return shuffleSamples(features, labels)
+    return (features, labels)
 
-    # Separate and return the features and labels.
-    features = [example for (example, _) in labeled_examples]
-    labels = [label for (_, label) in labeled_examples]
+
+def shuffleSamples(features, labels):
+    labeled_examples = list(zip(features, labels))
+    new_examples = random.sample(labeled_examples, len(labeled_examples))
+    features = [example for (example, _) in new_examples]
+    labels = [label for (_, label) in new_examples]
     return (features, labels)
 
 def getLaughTracks(number_of_samples = 1, shuf = True, log=True):
-    features_name = 'checkpoints/features_%s.npy' % (number_of_samples)
-    labels_name = 'checkpoints/labels_%s.npy' % (number_of_samples)
+    #features_name = 'checkpoints/features_%s.npy' % (number_of_samples)
+    #labels_name = 'checkpoints/labels_%s.npy' % (number_of_samples)
     
-    (features, labels) = getSamples(['laughter', 'notlaughter'], shuf = shuf, number_of_samples = number_of_samples, log=log)
-
-    labeled_examples = list(zip(features, labels))
-    if shuf:
-        shuffle(labeled_examples)
-
-    # Separate and return the features and labels.
-    features = [example for (example, _) in labeled_examples]
-    labels = [label for (_, label) in labeled_examples]
-    return (features, labels)
+    return getSamples(['laughter', 'notlaughter'], shuf = shuf, number_of_samples = number_of_samples, log=log)

@@ -33,11 +33,11 @@ flags.DEFINE_string(
 
 FLAGS = flags.FLAGS
 
-def trainAndSaveAndPredict(test_data, model, number_of_classes = 2, number_of_samples = 1, epochs = 5, getData = getLaughTracks, log = True):
+def trainAndSaveAndPredict(test_data, model, number_of_classes = 2, number_of_samples = 1, epochs = 5, getData = getLaughTracks, log = True, batch_size = 32):
     model_name = '%s_%s' % (model, number_of_samples)
     def curriedGetSamples(shuf):
         return getData(number_of_samples = number_of_samples, shuf = shuf, log = log)
-    preds = train(curriedGetSamples, number_of_classes, model_name = model_name, epochs = epochs)
+    preds = train(curriedGetSamples, number_of_classes, model_name = model_name, epochs = epochs, batch_size = batch_size)
     
     return predict('%s/%s_%s' % (model_name, epochs, epochs), number_of_classes, test_data)
 
@@ -53,10 +53,10 @@ def trainForNoise(number_of_samples=5, epochs=5):
     preds = trainAndSaveAndPredict(features, 'noise', number_of_classes = 3, number_of_samples = number_of_samples, epochs = epochs, getData = getNoise)
     printResults(preds, [0, 0, 1, 1, 2, 2])
     
-def trainForLaughter(number_of_samples=5, epochs=5):  
+def trainForLaughter(number_of_samples=5, epochs=5, batch_size = 32):  
     print('training on laughter and not laughter')
     (features, labels) = getLaughTracks(shuf=False, number_of_samples = 2, log=False)
-    preds = trainAndSaveAndPredict(features, number_of_classes = 2, number_of_samples = number_of_samples, epochs = epochs, getData = getLaughTracks, log = False)
+    preds = trainAndSaveAndPredict(features, number_of_classes = 2, number_of_samples = number_of_samples, epochs = epochs, getData = getLaughTracks, log = False, batch_size = batch_size)
     printResults(preds, [0, 0, 1, 1])
     
 def main(_):

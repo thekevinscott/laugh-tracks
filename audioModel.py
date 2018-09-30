@@ -6,6 +6,7 @@ import numpy as np
 import tensorflow as tf
 import os
 import vggish_input
+from tqdm import tqdm
 import vggish_params
 import vggish_slim
 from pydub import AudioSegment
@@ -13,7 +14,7 @@ from audioUtils import readFolder, shell
 
 slim = tf.contrib.slim
 
-def loadVGGish(sess, number_of_classes):
+def loadVGGish(sess, number_of_classes, lr = vggish_params.LEARNING_RATE):
     embeddings = vggish_slim.define_vggish_slim(True) # Do we train VGG-ish?
 
     # Define a shallow classification model and associated training ops on top
@@ -49,7 +50,7 @@ def loadVGGish(sess, number_of_classes):
 
         # We use the same optimizer and hyperparameters as used to train VGGish.
         optimizer = tf.train.AdamOptimizer(
-            learning_rate=vggish_params.LEARNING_RATE,
+            learning_rate=lr,
             epsilon=vggish_params.ADAM_EPSILON)
         optimizer.minimize(loss, global_step=global_step, name='train_op')
 
@@ -77,10 +78,11 @@ def deleteModel(model_name, model_id):
         #print('deleting model', path)
         shell('rm -rf %s' % path)
     
-def train(get_examples, number_of_classes, model_name='foo', epochs = 50):
+def train(get_examples, number_of_classes, model_name='foo', epochs = 50, batch_size = 32, lr = vggish_params.LEARNING_RATE):
+    VALIDATION_SPLIT = 0.1    
     with tf.Graph().as_default(), tf.Session() as sess:
         # Define VGGish.
-        logits, pred = loadVGGish(sess, number_of_classes)
+        logits, pred = loadVGGish(sess, number_of_classes, lr=lr)
 
         # Locate all the tensors and ops we need for the training loop.
         features_tensor = sess.graph.get_tensor_by_name(
@@ -97,15 +99,33 @@ def train(get_examples, number_of_classes, model_name='foo', epochs = 50):
 
         # The training loop.
         for epoch in range(epochs):
-            (features, labels) = get_examples(shuf=True)
-            [num_steps, loss, _] = sess.run(
-                [global_step_tensor, loss_tensor, train_op],
-                feed_dict={features_tensor: features, labels_tensor: labels})
-            print('Step %d: loss %g' % (num_steps, loss))
             
+            (features, labels) = get_examples(shuf=True)
+            train_x = features[0:round(len(features)*(1-VALIDATION_SPLIT))]
+            train_y = labels[0:round(len(features)*(1-VALIDATION_SPLIT))]
+            validation_x = features[round(len(features)*(1-VALIDATION_SPLIT)):]
+            validation_y = labels[round(len(features)*(1-VALIDATION_SPLIT)):]
+
+            for i in tqdm(range(0, len(train_x), batch_size)):
+                X_train_mini = train_x[i:i + batch_size]
+                y_train_mini = train_y[i:i + batch_size]
+
+                [num_steps, loss, _] = sess.run(
+                    [global_step_tensor, loss_tensor, train_op],
+                    feed_dict={features_tensor: X_train_mini, labels_tensor: y_train_mini})
+
+            preds = sess.run(pred, feed_dict={features_tensor: validation_x})
+            acc = accuracy(preds, validation_y)
+            print('Steps %d, epoch %d: loss %g, acc %f' % (num_steps, epoch, loss, acc))
             saveModel(sess, model_name, '%s_%s' % (epoch + 1, epochs))
             deleteModel(model_name, '%s_%s' % (epoch, epochs))
 
+def accuracy(predictions, labels):
+    pred_class = np.argmax(predictions, 1)
+    true_class = np.argmax(labels, 1)
+    return (np.sum(pred_class == true_class) / predictions.shape[0])
+    
+    
 def predict(model_name, number_of_classes, features):
     #print('number of classes', number_of_classes)
     model_name_to_load = './model/%s/model' % (model_name)   
