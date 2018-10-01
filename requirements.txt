@@ -10,6 +10,7 @@ click==6.7
 clint==0.5.1
 colorama==0.3.9
 cursor==1.2.0
+cycler==0.10.0
 decorator==4.3.0
 defusedxml==0.5.0
 entrypoints==0.2.3
@@ -36,11 +37,13 @@ jupyter-console==5.2.0
 jupyter-core==4.4.0
 jupyterlab==0.34.12
 jupyterlab-launcher==0.13.1
+kiwisolver==1.0.1
 llvmlite==0.25.0
 log-symbols==0.0.11
 Markdown==3.0
 MarkupSafe==1.0
 marshmallow==2.15.6
+matplotlib==3.0.0
 mistune==0.8.3
 nbconvert==5.4.0
 nbformat==4.4.0
@@ -59,6 +62,7 @@ pyaml==17.12.1
 pycryptodomex==3.6.6
 pydub==0.23.0
 Pygments==2.2.0
+pyparsing==2.2.2
 python-dateutil==2.7.3
 pytz==2018.5
 PyYAML==3.13

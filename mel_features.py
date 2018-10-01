@@ -39,9 +39,13 @@ def frame(data, window_length, hop_length):
     extracted.
   """
   num_samples = data.shape[0]
+  #print('num samples', num_samples)
   num_frames = 1 + int(np.floor((num_samples - window_length) / hop_length))
+  #print('num frames', num_frames)
   shape = (num_frames, window_length) + data.shape[1:]
+  #print('shape', shape)
   strides = (data.strides[0] * hop_length,) + data.strides
+  #print('stries', strides)
   return np.lib.stride_tricks.as_strided(data, shape=shape, strides=strides)
 
 

@@ -101,6 +101,9 @@ data
 play-data
 augmented_samples
 cache
+augmented
+env
+noise_samples
 
 vggish_model.ckpt
 vggish_pca_params.npz
@@ -112,3 +115,6 @@ floyd.yml
 .floydignore
 
 node_modules
+
+tmp.wav
+foo

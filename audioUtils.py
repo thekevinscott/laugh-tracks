@@ -6,10 +6,21 @@ import subprocess
 import numpy as np
 import math
 import os
+import re
 import IPython.display as ipd
+
+def load(path):
+    return AudioSegment.from_file(path).set_channels(1)
 
 def shell(cmd):
     subprocess.call(cmd, shell=True)
+    
+def mkdir(folder):
+    target = folder.split('/')
+    for i, directory in enumerate(target):
+        directory = '/'.join(target[0:i + 1])
+        if not os.path.isdir(directory):
+            os.mkdir(directory)
     
 def stripSilenceInPlace(file, threshold_beneath_average = 30):
     audio = stripSilenceFromAudio(file, int(threshold_beneath_average))
@@ -28,7 +39,9 @@ def stripSilenceFromAudio(file, threshold_beneath_average = 30):
 
 def getVid(id, target):
     youtube_path = 'http://www.youtube.com/watch?v=' + id
-    shell('youtube-dl --extract-audio --audio-format wav --output %s %s' % (target, youtube_path)) 
+    cmd = 'youtube-dl --extract-audio --audio-format wav --output %s %s' % (target, youtube_path)
+    #print('cmd', cmd)
+    shell(cmd) 
     return target
 
 
@@ -41,8 +54,25 @@ def readFolder(folder):
     pipe = subprocess.Popen('ls ' + folder, shell=True, stdout=subprocess.PIPE)
     files = []
     for line in pipe.stdout:
-        files.append(line.strip().decode('ascii'))
+        line = line.strip().decode('ascii')
+        files.append(line)
     
+    return files
+
+def readFolderRecursive(folder, ext=None):
+    escaped_folder = '\\ '.join(folder.split(' '))
+    cmd = 'ls %s' % escaped_folder
+    pipe = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    files = []
+    for line in pipe.stdout:
+        line = line.strip().decode('ascii')
+        file = '%s/%s' % (folder, line)
+        
+        if os.path.isdir(file):
+            files = files + readFolderRecursive(file, ext)
+        elif ext == None or re.match(ext,file):
+            files.append(file)
+                
     return files
 
 def writeAudio(files, folder):
@@ -59,30 +89,25 @@ def readAndWriteAudio(folder):
     writeAudio(files, folder)
 
 def downloadYtAndPrepareAudio(id, target, stripSilence, dtype = 'int16'):
-    print('id', id)
-    folder = '%s/' % (target)
-    downloaded_yt = '%s%s_yt.wav' % (folder, id)
-    prepared = '%s%s.wav' % (folder, id)
-    #print(downloaded_yt)
-    #print(prepared)
+    print('id', id, target)
 
-    #output_path_for_slices = '%s/out' % (folder)
-    
-    
-    #clearFolder(output_path_for_slices)    
-    
+    downloaded_yt = '%s.wav' % (target)
+    #print(downloaded_yt)
     getVid(id, downloaded_yt)
+    #print('we got it')
     if stripSilence:
         file = stripSilenceFromAudio(downloaded_yt)
         
     else:
         file = AudioSegment.from_file(downloaded_yt)
     
-    file.export(prepared, format="wav", bitrate="44.1k")   
-    shell('rm %s' % downloaded_yt)
-    return prepared
+    file.export(downloaded_yt, format="wav", bitrate="44.1k")   
+    #shell('rm %s' % downloaded_yt)
+    return file
     
-    
+def downloadYtAndPrepareAudios(ids, target, stripSilence):
+    for idx in ids:
+        downloadYtAndPrepareAudio(idx, '%s/%s' % (target, idx), stripSilence)
     
     
     

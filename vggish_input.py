@@ -24,6 +24,7 @@ import vggish_params
 
 
 def waveform_to_examples(data, sample_rate):
+  #print('w to e')
   """Converts audio waveform into an array of examples for VGGish.
 
   Args:
@@ -45,7 +46,7 @@ def waveform_to_examples(data, sample_rate):
   # Resample to the rate assumed by VGGish.
   if sample_rate != vggish_params.SAMPLE_RATE:
     data = resampy.resample(data, sample_rate, vggish_params.SAMPLE_RATE)
-
+  #print('pre log mel')
   # Compute log mel spectrogram features.
   log_mel = mel_features.log_mel_spectrogram(
       data,
@@ -56,17 +57,20 @@ def waveform_to_examples(data, sample_rate):
       num_mel_bins=vggish_params.NUM_MEL_BINS,
       lower_edge_hertz=vggish_params.MEL_MIN_HZ,
       upper_edge_hertz=vggish_params.MEL_MAX_HZ)
-
+  #print('log mel', log_mel.shape)
   # Frame features into examples.
   features_sample_rate = 1.0 / vggish_params.STFT_HOP_LENGTH_SECONDS
+  #print('features sample rate', features_sample_rate)
   example_window_length = int(round(
       vggish_params.EXAMPLE_WINDOW_SECONDS * features_sample_rate))
   example_hop_length = int(round(
       vggish_params.EXAMPLE_HOP_SECONDS * features_sample_rate))
+  #print('examples', example_window_length, example_hop_length)
   log_mel_examples = mel_features.frame(
       log_mel,
       window_length=example_window_length,
       hop_length=example_hop_length)
+  #print(log_mel_examples)
   return log_mel_examples
 
 

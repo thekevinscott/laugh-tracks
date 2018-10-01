@@ -10,7 +10,7 @@ import vggish_params
 import vggish_slim
 from pydub import AudioSegment
 from audioModel import predict, train
-from audioInput import getLaughTracks, getNoise
+from audioInput import getLaughTracks, getNoise, shuffleSamples
 from audioUtils import shell
 slim = tf.contrib.slim
 
