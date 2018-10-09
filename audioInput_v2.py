@@ -26,6 +26,8 @@ def gatherData(files, transforms = [], start_at_zero = False):
     #print('im punting on this and just discarding chunks that dont have audio')
     chunks_of_audio = []
     #print('collecting files', files)
+    print('gathering data for %i files' % (len(files)))
+    
     for i in tqdm(range(0, len(files))):
         file = files[i]
         if file in cache:
@@ -60,8 +62,9 @@ def gatherData(files, transforms = [], start_at_zero = False):
         samples = audio.get_array_of_samples()
         
         expected_chunks = calculateChunksForSamples(len(samples))
+        #print('processing %i chunks' % (expected_chunks))
         #print('expected chunks based on samples', expected_chunks)
-        for i in tqdm(range(0, expected_chunks)):
+        for i in range(0, expected_chunks):
             start = getPosition(i)
             end = getPosition(i + 1)
             if start < len(audio):
