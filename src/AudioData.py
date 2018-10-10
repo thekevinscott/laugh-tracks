@@ -9,14 +9,17 @@ class AudioData:
 
     def normalize(self, arr):
         numerator = arr - np.min(arr)
-        divisor = np.max(arr) - np.min(arr)
+        arr_min = np.min(arr)
+        arr_max = np.max(arr)
+        divisor = arr_max - arr_min
         if divisor > 0:
             #print('numerator', numerator, 'divisor', divisor)
-            assert divisor > 0, "Divisor is 0, Numerator: %f, Divisor: %f" % (numerator, divisor)
+            # assert divisor > 0, "Divisor is 0, Numerator: %f, Divisor: %f" % (numerator, divisor)
             normalized = numerator / divisor
             return normalized
 
-        assert np.max(arr) == 0 and np.min(arr) == 0, "arr has values that are not 0, something is fishy"
+        assert arr_max == arr_min, "arr has min and max that are not equal, min: %f, max: %f" % (arr_min, arr_max)
+        arr.fill(0)
         return arr
 
     def getSamplesAsVggishInput(self, sample):
