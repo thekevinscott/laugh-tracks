@@ -9,7 +9,7 @@ from audio_transforms import mixWithFolder
 from audio_transforms import changeGain, addCompression, changePitch
 from tqdm import tqdm
 import math
-from src import AudioData
+from src.AudioData import AudioData
 audioData = AudioData()
 
 def getOneHot(class_num, idx):

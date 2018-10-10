@@ -1,5 +1,6 @@
 import sys
-sys.path.insert(0, '/ai/laugh-tracks')
+import os
+sys.path.insert(0, os.path.abspath('..'))
 from vggish_input import waveform_to_examples
 import numpy as np
 

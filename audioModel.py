@@ -11,7 +11,7 @@ import vggish_params
 import vggish_slim
 from pydub import AudioSegment
 from audioUtils import readFolder, shell
-from audioInput import getSamplesAsVggishInput, shuffleSamples
+from audioInput import shuffleSamples
 
 
 slim = tf.contrib.slim
