@@ -25,8 +25,8 @@ def getPosition(i, channels = 1):
 cache = {}
 def gatherData(files, transforms = [], start_at_zero = False):
     chunks_of_audio = []
-    print('gathering data for %i files' % (len(files)))
-    
+    # print('gathering data for %i files' % (len(files)))
+
     for i in tqdm(range(0, len(files))):
         file = files[i]
         if file in cache:
@@ -34,7 +34,6 @@ def gatherData(files, transforms = [], start_at_zero = False):
         else:
             audio_segment = AudioSegment.from_file(file).set_channels(1)
             cache[file] = audio_segment
-            
         starting_index = 0
         if start_at_zero:
             starting_index = random.randint(0, 960)
@@ -53,7 +52,6 @@ def gatherData(files, transforms = [], start_at_zero = False):
                 else:
                     audio += transformed_audio
         samples = audio.get_array_of_samples()
-        
         expected_chunks = calculateChunksForSamples(len(samples))
         for i in range(0, expected_chunks):
             start = getPosition(i)
@@ -66,7 +64,6 @@ def gatherData(files, transforms = [], start_at_zero = False):
                     'file': file,
                     'starting_index': starting_index + start,
                 })
-            
     return chunks_of_audio
 
 def splitData(data, split):
@@ -137,11 +134,8 @@ def balanceData(chunks):
         label = chunk['label'].tostring()
         if label not in chunks_by_label:
             chunks_by_label[label] = []
-            
         chunks_by_label[label].append(chunk)
-        
     amount = 0
-    
     for key in chunks_by_label.keys():
         if len(chunks_by_label[key]) > amount:
             amount = len(chunks_by_label[key])
@@ -149,15 +143,14 @@ def balanceData(chunks):
     for key in chunks_by_label.keys():
         filled_up_chunks = fillUp(chunks_by_label[key], amount)
         chunks += filled_up_chunks
-        
     return chunks
-    
+
 def gatherTrainingData(dirs, split = .2, shuf = True, augment_folders = None):
     print('gathering training data')
     chunks_of_audio = []
     for i, d in enumerate(dirs):
         files = readFolderRecursive(d)
-        print('gathering training data for', files)        
+        print('gathering training data for', files)
         transforms = []
         augment_folder = augment_folders[i]
 
