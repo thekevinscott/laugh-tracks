@@ -105,7 +105,10 @@ def gatherTrainingDataWithCaching(dirs, augment_folders, should_balance = True, 
         chunks_of_audio = []
         for i, files in enumerate(fileDirs):
             transforms = augmentations[i]
-            print('gathering training data for on the fly with %i transforms for %i files' % (len(transforms), len(files)))
+            if transforms is None:
+                print('training data, no transforms, %i files' % (len(files)))
+            else:
+                print('training data, %i transforms, %i files' % (len(transforms), len(files)))
             chunks = gatherData(files, transforms = transforms)
             label = getOneHot(len(dirs), i)
             for chunk in chunks:
