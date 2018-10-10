@@ -26,8 +26,8 @@ def gatherTrainingData(files):
             'audio': audio,
             'file': file,
         })
-        
-    return audioFiles
+
+        return audioFiles
 
 def getNoise(shuf = True, number_of_samples = 1, log=False):
     """Returns a shuffled batch of examples of all audio classes.
@@ -102,7 +102,7 @@ def getHashForFiles(files, extra_string = ''):
 def getFilePathsForClass(c):
     files = readFolderRecursive('samples/%s' % (c), r"(.*)\.wav$")
     return files
-            
+
 def getSamplesForFile(file, seconds = None):
     try:
         print('1', file)
@@ -117,32 +117,15 @@ def getSamplesForFile(file, seconds = None):
         print('file failed', file)
         raise Exception('file failed: %s' % file)        
 
-# accepts a numpy array representing a single audio file, or multiple files concat'ed together
-def getSamplesAsVggishInput(sample):
-    x = np.array(vggish_input.waveform_to_examples(np.array(sample), SAMPLE_RATE))
-    numerator = x-np.min(x)
-    divisor = np.max(x)-np.min(x)
-    if divisor > 0:
-        #print('numerator', numerator, 'divisor', divisor)
-        assert divisor > 0, "Divisor is 0, Numerator: %f, Divisor: %f" % (numerator, divisor) 
-        normalized = numerator/divisor
-        return normalized
-    
-    assert np.max(x) == 0 and np.min(x) == 0, "x has values that are not 0, something is fishy"
-    return x
-    #print('n', normalized) 
-    #return x
-
-
 def getChunksForSamples(samples, file):
     chunks = []
     for i in range(0, getChunksForMs(getMsForSamples(len(samples)))):
         chunks.append({
             'file': file,
             'start': i,
-        })
-        
-    return chunks
+            })
+
+        return chunks
 
 def getSamplesForFiles(files):
     fileSamples = []
@@ -150,18 +133,18 @@ def getSamplesForFiles(files):
         samples = getSamplesForFile(file)
         chunks = getChunksForSamples(samples, file)
         fileSample = {
-            'chunks': chunks,
-            'samples': samples
-        }
+                'chunks': chunks,
+                'samples': samples
+                }
         fileSamples.append(fileSample)
-              
+
     return fileSamples
 
 
 def getSamplesForFileWithOptionalCache(files, number_of_samples, log=False, use_cache = True):  
     if use_cache == False:
         return getSamplesForFiles(files, number_of_samples, log=log)
-    
+
     filename = getHashForFiles(files, number_of_samples)
     #print('using cache with file', filename)
     cache_file = 'cache/%s.pkl' % filename
@@ -191,9 +174,9 @@ def getData(files, arr):
             'samples': samples,
             'chunks': chunks,
             'labels': labels,
-        })
+            })
 
-    return zippedUp
+        return zippedUp
 
 def getOneHot(class_num, idx):
     arr = np.zeros(class_num)
@@ -210,7 +193,7 @@ def getSamples(classes, shuf = True):
     allChunks = []
     foundFiles = {}
     clsLengths = {}
-    
+
     for idx, cls in enumerate(classes):
         files = getFilePathsForClass(cls)
         foundFiles[cls] = files
@@ -223,7 +206,7 @@ def getSamples(classes, shuf = True):
             allChunks.append(chunks)
             exes.append(x)
             whys.append(y)
-        
+
     print('Number of features per class', clsLengths)
     features = np.concatenate(exes)
     labels = np.concatenate(whys)

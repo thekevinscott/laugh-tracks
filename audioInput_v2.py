@@ -1,24 +1,25 @@
 #!apt-get install ffmpeg -y
 #from pydub import AudioSegment
 #from audioUtils import readFolderRecursive
-#from audioInput import getOneHot, getFilePathsForClass, getSamplesAsVggishInput, calculateChunksForSamples, calculateMsForSamples, calculateMsForChunks
 import random
 import numpy as np
-from audioInput import readFolderRecursive, calculateChunksForSamples, calculateChunksForMs, calculateMsForChunks, getSamplesAsVggishInput
+from audioInput import readFolderRecursive, calculateChunksForSamples, calculateChunksForMs, calculateMsForChunks
 from pydub import AudioSegment
 from audio_transforms import mixWithFolder
 from audio_transforms import changeGain, addCompression, changePitch
 from tqdm import tqdm
 import math
+from src import AudioData
+audioData = AudioData()
 
 def getOneHot(class_num, idx):
     arr = np.zeros(class_num)
     arr[idx] = 1
     return arr
 
-def getPosition(i):
+def getPosition(i, channels = 1):
     #mult = 16
-    mult = 8
+    mult = 8 * channels
     return (calculateMsForChunks(i) + (i * mult))
 
 cache = {}
@@ -250,7 +251,7 @@ def preprocessForTesting(chunks):
             #assert len(samples) > 0, "Audio is empty: %s, starting index: %s, enumerated index: %i " % (chunk['file'], chunk['starting_index'], i)
             #print('len of samples', len(samples))
             #print(chunk)
-            vggish_samples = getSamplesAsVggishInput(samples)
+            vggish_samples = audioData.getSamplesAsVggishInput(samples)
 
             #a = np.array(vggish_samples)
             #print(np.max(a), np.min(a), np.mean(a), vggish_samples[0][0][0])
@@ -287,7 +288,7 @@ def preprocessForTraining(chunks):
             #assert len(samples) > 0, "Audio is empty: %s, starting index: %s, enumerated index: %i " % (chunk['file'], chunk['starting_index'], i)
             #print('len of samples', len(samples))
             print('chunk', chunk)
-            vggish_samples = getSamplesAsVggishInput(samples)
+            vggish_samples = audioData.getSamplesAsVggishInput(samples)
 
             #print('vggish samples', len(vggish_samples))
             assert len(vggish_samples) == 1, "VGGish returned not 1, but %i: %s, starting index: %s, enumerated index: %i " % (len(vggish_samples), chunk['file'], chunk['starting_index'], i)
