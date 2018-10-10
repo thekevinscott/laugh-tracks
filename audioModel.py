@@ -65,10 +65,7 @@ def loadVGGish(sess, number_of_classes, lr = vggish_params.LEARNING_RATE):
 def saveModel(sess, model_name, model_id):
     model_folder = './model/%s' % model_name
     model_folder_id = '%s/%s' % (model_folder, model_id)    
-    if not os.path.isdir(model_folder):
-        os.mkdir(model_folder)
-    if not os.path.isdir(model_folder_id):
-        os.mkdir(model_folder_id)        
+    os.makedirs(model_folder_id, exist_ok=True)
     saver = tf.train.Saver()
     path = '%s/model' % model_folder_id
     print('saving model', path)
