@@ -122,10 +122,14 @@ def getSamplesAsVggishInput(sample):
     x = np.array(vggish_input.waveform_to_examples(np.array(sample), SAMPLE_RATE))
     numerator = x-np.min(x)
     divisor = np.max(x)-np.min(x)
-    print('numerator', numerator, 'divisor', divisor)
-    assert divisor > 0, "Divisor is 0, Numerator: %f, Divisor: %f" % (numerator, divisor) 
-    normalized = numerator/divisor
-    return normalized
+    if divisor > 0:
+        #print('numerator', numerator, 'divisor', divisor)
+        assert divisor > 0, "Divisor is 0, Numerator: %f, Divisor: %f" % (numerator, divisor) 
+        normalized = numerator/divisor
+        return normalized
+    
+    assert np.max(x) == 0 and np.min(x) == 0, "x has values that are not 0, something is fishy"
+    return x
     #print('n', normalized) 
     #return x
 

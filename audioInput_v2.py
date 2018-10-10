@@ -286,7 +286,7 @@ def preprocessForTraining(chunks):
         if expected_chunks > 0:
             #assert len(samples) > 0, "Audio is empty: %s, starting index: %s, enumerated index: %i " % (chunk['file'], chunk['starting_index'], i)
             #print('len of samples', len(samples))
-            print('chunk', chunk['file'])
+            print('chunk', chunk)
             vggish_samples = getSamplesAsVggishInput(samples)
 
             #print('vggish samples', len(vggish_samples))
