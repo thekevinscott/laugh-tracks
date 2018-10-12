@@ -24,7 +24,11 @@ class AudioData:
         return arr
 
     def getSamplesAsVggishInput(self, sample):
-        vggish_samples = waveform_to_examples(np.array(sample), SAMPLE_RATE)
+        sample = np.array(sample)
+        sample = np.concatenate((sample, np.array([0] * 310)), axis=0)
+        vggish_samples = waveform_to_examples(sample, SAMPLE_RATE)
+        assert len(vggish_samples) > 0, "vggish returned 0, check your incoming samples"
+        # print(vggish_samples)
         return self.normalize(np.array(vggish_samples))
 
 

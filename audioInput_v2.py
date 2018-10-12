@@ -1,17 +1,18 @@
 #!apt-get install ffmpeg -y
-#from pydub import AudioSegment
 #from audioUtils import readFolderRecursive
 import random
 import numpy as np
-from audioInput import readFolderRecursive, calculateChunksForSamples, calculateChunksForMs, calculateMsForChunks
-from pydub import AudioSegment
+from audioUtils import readFolder, readFolderRecursive, load
+from audioInput import readFolderRecursive, calculateSamplesForChunks, calculateChunksForSamples, calculateChunksForMs, calculateMsForChunks
 from audio_transforms import mixWithFolder
 from audio_transforms import changeGain, addCompression, changePitch
 from tqdm import tqdm
 import math
 from src.AudioData import AudioData
+from vggish_input import waveform_to_examples
 audioData = AudioData()
 
+SAMPLE_RATE = 44100
 def getOneHot(class_num, idx):
     arr = np.zeros(class_num)
     arr[idx] = 1
@@ -20,6 +21,7 @@ def getOneHot(class_num, idx):
 def getPosition(i, channels = 1):
     #mult = 16
     mult = 8 * channels
+    # return (calculateSamplesForChunks(i) + (i * mult))
     return (calculateMsForChunks(i) + (i * mult))
 
 cache = {}
@@ -32,11 +34,11 @@ def gatherData(files, transforms = [], start_at_zero = False):
         if file in cache:
             audio_segment = cache[file]
         else:
-            audio_segment = AudioSegment.from_file(file).set_channels(1)
+            audio_segment = load(file)
             cache[file] = audio_segment
         starting_index = 0
         if start_at_zero:
-            starting_index = random.randint(0, 960)
+            starting_index = random.randint(0, calculateMsForChunks(1))
 
         sliced_audio = audio_segment[starting_index:]
 
@@ -51,13 +53,18 @@ def gatherData(files, transforms = [], start_at_zero = False):
                     audio = transformed_audio
                 else:
                     audio += transformed_audio
+
         samples = audio.get_array_of_samples()
+        # print('samples', len(samples))
         expected_chunks = calculateChunksForSamples(len(samples))
+        # print('expected_chunks', expected_chunks)
+        assert expected_chunks == len(waveform_to_examples(np.array(samples), SAMPLE_RATE)), "vggish does not match expected samples"
         for i in range(0, expected_chunks):
             start = getPosition(i)
             end = getPosition(i + 1)
             if start < len(audio):
-                assert start < len(audio), "Start time is greater than the length of the audio: start_time: %f, length of audio: %f" % (start, len(audio))
+                # chunk_of_samples = samples[start:end]
+                # chunk_of_audio = audio._spawn(chunk_of_samples)
                 chunk_of_audio = audio[start:end]
                 chunks_of_audio.append({
                     'audio': chunk_of_audio,
@@ -96,13 +103,13 @@ def gatherTrainingDataWithCaching(dirs, augment_folders, should_balance = True, 
                 augs.append(aug)
             augmentations[i] = augs
         else:
-            augmentations[i] = None
+            augmentations[i] = []
 
     def curriedFn(split = 0.2, shuf = True):
         chunks_of_audio = []
         for i, files in enumerate(fileDirs):
             transforms = augmentations[i]
-            if transforms is None:
+            if len(transforms) == 0:
                 print('training data, no transforms, %i files' % (len(files)))
             else:
                 print('training data, %i transforms, %i files' % (len(transforms), len(files)))
@@ -167,12 +174,11 @@ def gatherTrainingData(dirs, split = .2, shuf = True, augment_folders = None):
                 ]),
             ]
         chunks = gatherData(files, transforms = transforms)
-        
-        
+
         label = getOneHot(len(dirs), i)
         for chunk in chunks:
             chunk['label'] = label
-            
+
         chunks_of_audio += chunks
     if shuf:
         random.shuffle(chunks_of_audio)
@@ -181,14 +187,14 @@ def gatherTrainingData(dirs, split = .2, shuf = True, augment_folders = None):
     return preprocessForTraining(train), preprocessForTraining(test)
 
 def gatherTestingData(files):
-    chunks_of_audio = gatherData(files, transforms = [], start_at_zero = True)
-    return preprocessForTesting(chunks_of_audio) 
+    chunks = gatherData(files, transforms = [], start_at_zero = True)
+    samples, labels = preprocessForTraining(chunks, False)
+    return samples, chunks
 
 def concatSamples(chunks):
     all_samples = None
     for chunk in chunks:
         if 'samples' in chunk:
-            
             samples = chunk['samples']
             if all_samples is None:
                 all_samples = samples
@@ -196,20 +202,22 @@ def concatSamples(chunks):
                 all_samples = np.concatenate((all_samples,samples), axis=0)
     return all_samples
 
-def preprocessForTesting(chunks):
-    for i, chunk in enumerate(chunks):
-        audio = chunk['audio']
-        samples = audio.get_array_of_samples()
-        expected_chunks = calculateChunksForSamples(len(samples))
-        assert expected_chunks <= 1, "Expected chunks is greater than 1, something is dearly wrong, %i, %s " % (expected_chunks, chunk['file'])
-        if expected_chunks > 0:
-            vggish_samples = audioData.getSamplesAsVggishInput(samples)
-            chunk['samples'] = vggish_samples
+# def preprocessForTesting(chunks):
+#     for i, chunk in enumerate(chunks):
+#         audio = chunk['audio']
+#         samples = audio.get_array_of_samples()
+#         expected_chunks = calculateChunksForSamples(len(samples))
+#         expected_chunks_for_ms = calculateChunksForMs(len(audio))
+#         # print('chunks', expected_chunks, expected_chunks_for_ms, len(audio))
+#         assert expected_chunks <= 1, "Expected chunks is greater than 1, something is dearly wrong, %i, %s " % (expected_chunks, chunk['file'])
+#         if expected_chunks > 0:
+#             vggish_samples = audioData.getSamplesAsVggishInput(samples)
+#             chunk['samples'] = vggish_samples
 
-    return concatSamples(chunks), chunks
+#     return concatSamples(chunks), chunks
 
 
-def preprocessForTraining(chunks):
+def preprocessForTraining(chunks, check_labels = True):
     all_samples = None
     labels = []
     print('preprocess for training', len(chunks))
@@ -217,7 +225,6 @@ def preprocessForTraining(chunks):
     for i in tqdm(range(0, len(chunks))):
         chunk = chunks[i]
         audio = chunk['audio']
-        
         samples = audio.get_array_of_samples()
         expected_chunks = calculateChunksForSamples(len(samples))
         expected_chunks_for_ms = calculateChunksForMs(len(audio))
@@ -225,16 +232,15 @@ def preprocessForTraining(chunks):
         assert expected_chunks <= 1, "Expected chunks is %i and should be 1 or less, something is dearly wrong, %s " % (expected_chunks, chunk['file'])
 
         if expected_chunks > 0:
-            # print('chunk', chunk)
             vggish_samples = audioData.getSamplesAsVggishInput(samples)
             assert len(vggish_samples) == 1, "VGGish returned not 1, but %i: %s, starting index: %s, enumerated index: %i " % (len(vggish_samples), chunk['file'], chunk['starting_index'], i)
             chunk['samples'] = vggish_samples
-    
     for chunk in chunks:
-        if 'samples' in chunk:
+        if 'samples' in chunk and 'label' in chunk:
             labels.append(chunk['label'])
     all_samples = concatSamples(chunks)
-            
     assert np.array(all_samples).shape[1] == 96, "Check shape of final samples, %s" % (np.array(all_samples).shape)
-    assert len(labels) == len(all_samples), "Sizes don't match post vggish calc, labels: %i, samples: %i" % (len(labels), len(all_samples))
+    if check_labels:
+        assert len(labels) == len(all_samples), "Sizes don't match post vggish calc, labels: %i, samples: %i" % (len(labels), len(all_samples))
+
     return all_samples, labels

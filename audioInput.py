@@ -77,15 +77,21 @@ def getNoise(shuf = True, number_of_samples = 1, log=False):
     labels = [label for (_, label) in labeled_examples]
     return (features, labels)
 
-def calculateMsForChunks(chunks):
-    return int(960*chunks) + 16
+
+
+def calculateMsForChunks(chunks, channels = 1):
+    return int(960*chunks) + (16 * channels)
 
 def calculateSamplesForMs(ms):
     return int(SAMPLE_RATE/1000*ms)
 
+def calculateSamplesForChunks(chunks, channels = 1):
+    return calculateSamplesForMs(calculateMsForChunks(chunks, channels))
 
-def calculateChunksForMs(ms):
-    return math.floor((ms - 16) / 960)
+
+
+def calculateChunksForMs(ms, channels = 1):
+    return math.floor((ms - (16 * channels)) / 960)
 
 def calculateMsForSamples(samples):
     return samples * 1000 / SAMPLE_RATE
@@ -105,13 +111,13 @@ def getFilePathsForClass(c):
 
 def getSamplesForFile(file, seconds = None):
     try:
-        print('1', file)
+        # print('1', file)
         audio = load(file)
-        print('2')        
+        # print('2')        
         start = random.randint(0, SAMPLE_RATE * .96)
-        print('start', start)
+        # print('start', start)
         samples = audio.get_array_of_samples()
-        print('3')
+        # print('3')
         return samples[start:]
     except:
         print('file failed', file)
