@@ -1,6 +1,6 @@
 FROM nvidia/cuda:9.0-base-ubuntu16.04
 
-# TF dependencies
+######### Tensorflow Dependencies #########
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
         cuda-command-line-tools-9-0 \
@@ -27,45 +27,29 @@ RUN apt-get update && \
         apt-get update && \
         apt-get install libnvinfer4=4.1.2-1+cuda9.0
 
-# System packages
+######### System Packages #########
 RUN apt-get install vim -y
 RUN apt-get install -y git
 
-# Python 3
+######### Python #########
 RUN add-apt-repository ppa:deadsnakes/ppa
 RUN apt-get update
 RUN apt-get install python3.6 -y
 RUN apt-get update && apt-get install -y curl wget
 RUN apt-get install python3-pip -y
-
-# Python tools
 RUN pip3 install --upgrade pip setuptools
 RUN pip3 install tensorflow-gpu tensorflowjs
 RUN pip3 install virtualenv
 RUN pip3 uninstall --yes prompt_toolkit
 RUN pip3 install prompt_toolkit==2.0.4
 
-# RUN apt-get remove python -y
-# RUN apt-get remove python2.7 -y
-# RUN apt-get remove python2.7-minimal -y
-# RUN apt-get remove python3 -y
-# RUN apt-get remove python3.5 -y
-# RUN apt-get remove python3.5-minimal -y
-# https://stackoverflow.com/questions/43759610/how-to-add-python-3-6-kernel-alongside-3-5-on-jupyter
-# RUN rm -f /usr/bin/python3
-# RUN ln -s /usr/bin/python3.6 /usr/bin/python3
-# RUN ln -s /usr/bin/python3.6 /usr/bin/python
-
 ######### VGGish #########
 RUN mkdir -p /lib
 RUN git clone https://github.com/tensorflow/models /lib/models
-# Dependencies for VGGish model
 RUN pip3 install numpy scipy
 RUN pip3 install resampy tensorflow six
-# Data for VGGish model
 RUN curl -o /lib/models/research/audioset/vggish/vggish_model.ckpt https://storage.googleapis.com/audioset/vggish_model.ckpt
 RUN curl -o /lib/models/research/audioset/vggish/vggish_pca_params.npz https://storage.googleapis.com/audioset/vggish_pca_params.npz
-# Path setup
 ENV PYTHONPATH "${PYTHONPATH}:/lib/models/research/audioset/vggish"
 
 ######### Jupyter #########
